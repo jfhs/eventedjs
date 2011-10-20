@@ -1,0 +1,74 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+		"http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+	<title>Chat</title>
+<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.6.4/jquery.min.js"></script>
+<script type="text/javascript" src="../evented.js"></script>
+<script>
+	$(document).ready(function() {
+		var evented = Evented({
+			'url': './events.php',
+			'pull_interval': 1000
+		});
+		evented.bind('message', function(data) {
+			if (!data.local) {
+				$("#log").append("<li>" + data.data.text + "</li>");
+			}
+		});
+		evented.bind('latency', function(data) {
+			$("#log").append("<li>Latency changed to " + data.data.latency + "</li>");
+			evented._params.pull_interval = data.data.latency;
+		});
+		evented.bind('enter', function(data) {
+			if (!data.local) {
+				$("#log").append("<li>" + data.data.nick + " entered chat</li>");
+			} else {
+				$("#login").hide();
+				$("#chat").show();
+			}
+		});
+		evented.bind(null, function() {
+			$("#log")[0].scrollTop = $("#log")[0].scrollHeight;
+		});
+		$("#send").click(function() {
+			evented.trigger("message", {
+				'text': $("#message").val()
+			});
+			return false;
+		});
+		$("#enter").click(function() {
+			if ($("#nick").val()) {
+				evented.trigger("enter", {
+					'nick': $("#nick").val()
+				});
+			}
+		});
+		$("#message").keypress(function(e){
+			if (e.keyCode == 13) {
+				$("#send").click();
+			}
+		});
+		evented.pull();
+	});
+</script>
+<style type="text/css">
+	#chat {
+		display:none;
+	}
+	#log {
+		height: 300px;
+		overflow: scroll;
+	}
+</style>
+</head>
+<body>
+<div id="login">
+	Nick:<input type="text" id="nick"><input type="submit" value="Enter" id="enter">
+</div>
+<div id="chat">
+	<ul id="log"></ul>
+	Message:<input type="text" name="message" id="message" size="50"><input type="submit" id="send" value="Send">
+</div>
+</body>
+</html>
