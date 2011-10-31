@@ -1,17 +1,20 @@
 if (jQuery) {
 	Evented = function(params) {
 		params = jQuery.extend({
-			'pull_interval': 0
+			'pull_interval': 0,
+			'token': 0
 		}, params);
 		var result = {
 			'_params': {},
 			'_handlers': {},
 			'_global_handlers': [],
 			'_timeout': 0,
-			'_last_state': false,
+			'_last_state': 0,
 			'_pulling': false,
+			'_token': 0,
 			_init: function(params) {
 				this._params = params;
+				this._token = params.token;
 				var _this = this;
 				if (params.pull_interval) {
 					this._timeout = setTimeout(function() {
@@ -22,6 +25,7 @@ if (jQuery) {
 			_ajax_handler: function(data) {
 				var parsed = JSON.parse(data.responseText);
 				this._last_state = parsed.state;
+				this._token = parsed.token;
 				var events = parsed.events;
 				for(var i in events) {
 					var event_data = {
@@ -46,7 +50,8 @@ if (jQuery) {
 					'type': 'GET',
 					'url': this._params.url,
 					'data': {
-						'state': this._last_state
+						'state': this._last_state,
+						'token': this._token
 					},
 					'context': this,
 					'complete': this._ajax_handler
@@ -97,9 +102,9 @@ if (jQuery) {
 						'type': 'POST',
 						'url': this._params.url,
 						'data': {
-							'event': event,
-							'data': JSON.stringify(data),
-							'state': this._last_state
+							'events': [event_data],
+							'state': this._last_state,
+							'token': this._token
 						},
 						'context': this,
 						'complete': this._ajax_handler

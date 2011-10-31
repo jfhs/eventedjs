@@ -35,6 +35,7 @@
 			evented.trigger("message", {
 				'text': $("#message").val()
 			});
+			$("#message").val("");
 			return false;
 		});
 		$("#enter").click(function() {
